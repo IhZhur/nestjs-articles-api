@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ArticleModule } from './article/article.module'; // 👈 Article module
 
 import { AuthModule } from './auth/auth.module'; 
+import { UserModule } from './user/user.module';
 @Module({
   imports: [
     // Загрузка переменных из .env
@@ -26,7 +27,7 @@ import { AuthModule } from './auth/auth.module';
 
     // Подключение модуля статьи
     ArticleModule, // 👈 updated
-    AuthModule, // 👈 добавляем сюда
+    AuthModule, UserModule, // 👈 добавляем сюда
   ],
 })
 export class AppModule {}

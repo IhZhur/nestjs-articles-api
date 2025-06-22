@@ -1,36 +1,66 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../user/user.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
+// Сервис авторизации
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  // Простая имитация юзера
-  private readonly user = {
-    id: 1,
-    username: 'admin',
-    password: 'password',
-  };
-
-  async validateUser(username: string, password: string) {
-    if (username === this.user.username && password === this.user.password) {
-      const { password, ...result } = this.user;
-      return result;
+  // Регистрация
+  async register(registerDto: RegisterDto) {
+    const existingUser = await this.userService.findByEmail(registerDto.email);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
     }
-    return null;
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const user = await this.userService.create({
+      ...registerDto,
+      password: hashedPassword,
+    });
+    const { password, ...result } = user;
+    return result;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.id };
+  // /// START: обновлённая логика login с расширенным payload и user в ответе /// 👈 updated
+  async login(loginDto: LoginDto) {
+    const user = await this.userService.findByEmail(loginDto.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const passwordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+    if (!passwordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role, // 👈 добавлено для RBAC
+    };
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
-
-  async authenticate(username: string, password: string) {
-    const user = await this.validateUser(username, password);
-    if (!user) throw new UnauthorizedException();
-    return this.login(user);
-  }
+  // /// END: обновлённая логика login с расширенным payload и user в ответе ///
 }

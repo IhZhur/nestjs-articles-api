@@ -1,4 +1,4 @@
-// src/article/article.service.ts
+// Service
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,8 +18,21 @@ export class ArticleService {
     return this.articleRepository.save(article);
   }
 
-  async findAll(): Promise<Article[]> {
-    return this.articleRepository.find();
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    published?: boolean;
+  }): Promise<Article[]> {
+    const { page = 1, limit = 10, published } = query;
+
+    const where = published !== undefined ? { published } : {};
+
+    return this.articleRepository.find({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'DESC' },
+    });
   }
 
   async findOne(id: number): Promise<Article> {

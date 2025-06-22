@@ -12,6 +12,8 @@ MySQL (через XAMPP)
 
 class-validator, class-transformer
 
+@nestjs/swagger, swagger-ui-express
+
 REST API
 
 🚀 Быстрый старт
@@ -107,6 +109,14 @@ GET /articles?page=1&limit=3&published=false
 
 Используется глобальная валидация DTO через class-validator + ValidationPipe.
 
+📄 Swagger-документация
+
+Интерактивная документация доступна по адресу:
+
+👉 http://localhost:3000/api
+
+Реализовано с помощью @nestjs/swagger и swagger-ui-express.
+
 💠 План разработки
 
 ✅ Настройка NestJS + TypeORM + MySQL
@@ -127,6 +137,9 @@ GET /articles?page=1&limit=3&published=false
 
 ✅ Реализовать сортировку по дате/заголовку
 
+✅ Подключить Swagger (@nestjs/swagger)
+
 👨‍💻 Автор
 
 IhZhur
+

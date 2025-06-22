@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ArticleModule } from './article/article.module'; // 👈 Article module
 
+import { AuthModule } from './auth/auth.module'; 
 @Module({
   imports: [
     // Загрузка переменных из .env
@@ -25,6 +26,7 @@ import { ArticleModule } from './article/article.module'; // 👈 Article module
 
     // Подключение модуля статьи
     ArticleModule, // 👈 updated
+    AuthModule, // 👈 добавляем сюда
   ],
 })
 export class AppModule {}

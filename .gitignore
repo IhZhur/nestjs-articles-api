@@ -12,6 +12,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# TypeORM
+/src/migrations/*.js
+/src/migrations/*.js.map
+
 # OS
 .DS_Store
 

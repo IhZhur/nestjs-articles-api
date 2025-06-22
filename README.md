@@ -14,7 +14,7 @@ class-validator, class-transformer
 
 @nestjs/swagger, swagger-ui-express
 
-REST API
+REST API + миграции через TypeORM CLI
 
 🚀 Быстрый старт
 
@@ -117,6 +117,18 @@ GET /articles?page=1&limit=3&published=false
 
 Реализовано с помощью @nestjs/swagger и swagger-ui-express.
 
+📦 Миграции с помощью TypeORM CLI
+
+Генерация новой миграции:
+
+npm run typeorm -- migration:generate src/migrations/SomeName -- -d typeorm.config.ts
+
+Применение всех миграций:
+
+npm run typeorm -- migration:run -- -d typeorm.config.ts
+
+Конфигурация находится в src/data-source.ts, CLI использует typeorm.config.ts.
+
 💠 План разработки
 
 ✅ Настройка NestJS + TypeORM + MySQL
@@ -139,7 +151,8 @@ GET /articles?page=1&limit=3&published=false
 
 ✅ Подключить Swagger (@nestjs/swagger)
 
+✅ Настроить миграции через TypeORM CLI
+
 👨‍💻 Автор
 
 IhZhur
-

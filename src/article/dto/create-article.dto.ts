@@ -1,18 +1,20 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger'; // 👈
+// src/article/dto/create-article.dto.ts
+
+import { IsString, IsOptional, IsBoolean, IsInt } from 'class-validator';
 
 export class CreateArticleDto {
-  @ApiProperty({ example: 'Заголовок статьи' })
   @IsString()
-  title: string;
+  readonly title: string;
 
-  @ApiProperty({ example: 'Содержимое статьи', required: false })
-  @IsOptional()
   @IsString()
-  content?: string;
-
-  @ApiProperty({ example: true, required: false })
   @IsOptional()
+  readonly content?: string;
+
   @IsBoolean()
-  published?: boolean;
+  @IsOptional()
+  readonly published?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  readonly userId?: number; // 👈 для связи с пользователем
 }

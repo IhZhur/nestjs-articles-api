@@ -1,17 +1,37 @@
 // src/article/article.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../user/user.entity';
 
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn()
-  id: number; // 👈 auto-increment
+  id: number;
 
-  @Column()
-  title: string; // 👈 required
+  @Column({ nullable: false })
+  title: string;
 
-  @Column({ nullable: true })
-  content?: string; // 👈 optional
+  @Column({ nullable: true, type: 'text' })
+  content?: string;
 
   @Column({ default: false })
-  published: boolean; // 👈 default: false
+  published: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date; // 👈 добавлено
+
+  @UpdateDateColumn()
+  updatedAt: Date; // 👈 добавлено
+
+  // /// START связь с пользователем
+  @ManyToOne(() => User, (user) => user.articles, { onDelete: 'CASCADE' })
+  user: User;
+  // /// END
 }

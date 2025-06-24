@@ -1,19 +1,21 @@
-// user.entity.ts
+// src/user/user.entity.ts
+
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
 } from 'typeorm';
-import { IsEmail, IsEnum, MinLength } from 'class-validator';
-import * as bcrypt from 'bcrypt';
+import { Article } from '../article/article.entity';
 
+// /// START: ENUM РОЛЕЙ
 export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
 }
+// /// END
 
 @Entity()
 export class User {
@@ -21,25 +23,20 @@ export class User {
   id: number;
 
   @Column({ unique: true })
-  @IsEmail()
-  email: string;
+  username: string;
 
   @Column()
-  @MinLength(6)
   password: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
-  @IsEnum(UserRole)
   role: UserRole;
+
+  @OneToMany(() => Article, (article) => article.user)
+  articles: Article[];
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @BeforeInsert()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
 }

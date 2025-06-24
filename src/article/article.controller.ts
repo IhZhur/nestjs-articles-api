@@ -1,3 +1,5 @@
+// src/article/article.controller.ts
+
 import {
   Controller,
   Get,
@@ -7,68 +9,55 @@ import {
   Put,
   Delete,
   ParseIntPipe,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { GetArticlesQueryDto } from './dto/get-articles-query.dto';
-import { Article } from './article.entity';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-// /// START: Swagger-декораторы /// 👈 updated
-import { ApiTags, ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
-// /// END
-
-@ApiTags('articles')
-@ApiBearerAuth()
 @Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
-  @ApiResponse({ status: 201, description: 'Создать статью.' })
-  @ApiBody({ type: CreateArticleDto })
+  // /// START create
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() dto: CreateArticleDto): Promise<Article> {
-    return this.articleService.create(dto);
+  create(@Body() createArticleDto: CreateArticleDto) {
+    return this.articleService.create(createArticleDto);
   }
+  // /// END
 
-  @ApiResponse({ status: 200, description: 'Получить список статей.' })
+  // /// START findAll
   @Get()
-  findAll(@Query() query: GetArticlesQueryDto): Promise<Article[]> {
-    const parsedQuery = {
-      page: query.page ? parseInt(query.page, 10) : 1,
-      limit: query.limit ? parseInt(query.limit, 10) : 10,
-      published:
-        query.published !== undefined ? query.published === 'true' : undefined,
-    };
-
-    return this.articleService.findAll(parsedQuery);
+  findAll() {
+    return this.articleService.findAll();
   }
+  // /// END
 
-  @ApiResponse({ status: 200, description: 'Получить одну статью.' })
+  // /// START findOne
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Article> {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.findOne(id);
   }
+  // /// END
 
-  @ApiResponse({ status: 200, description: 'Обновить статью.' })
-  @ApiBody({ type: UpdateArticleDto })
+  // /// START update
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateArticleDto,
-  ): Promise<Article> {
-    return this.articleService.update(id, dto);
+    @Body() updateArticleDto: UpdateArticleDto,
+  ) {
+    return this.articleService.update(id, updateArticleDto);
   }
+  // /// END
 
-  @ApiResponse({ status: 200, description: 'Удалить статью.' })
+  // /// START remove
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.remove(id);
   }
+  // /// END
 }

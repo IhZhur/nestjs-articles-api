@@ -1,5 +1,17 @@
 // src/article/dto/update-article.dto.ts
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateArticleDto } from './create-article.dto';
 
-export class UpdateArticleDto extends PartialType(CreateArticleDto) {}
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
+
+export class UpdateArticleDto {
+  @IsString()
+  @IsOptional()
+  readonly title?: string;
+
+  @IsString()
+  @IsOptional()
+  readonly content?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  readonly published?: boolean;
+}

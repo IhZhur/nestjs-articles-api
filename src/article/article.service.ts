@@ -2,10 +2,11 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Article } from './article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { QueryArticleDto } from './dto/query-article.dto';
 import { User } from '../user/user.entity';
 
 @Injectable()
@@ -13,12 +14,11 @@ export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
-
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // /// START create
+  // /// START create (без изменений)
   async create(createArticleDto: CreateArticleDto): Promise<Article> {
     const { userId, ...articleData } = createArticleDto;
     let user: User | null = null;
@@ -34,13 +34,30 @@ export class ArticleService {
   }
   // /// END
 
-  // /// START findAll
-  async findAll(): Promise<Article[]> {
-    return this.articleRepository.find({ relations: ['user'] });
+  // /// START findAll c фильтрами и сортировкой
+  async findAll(query: QueryArticleDto): Promise<Article[]> {
+    const qb: SelectQueryBuilder<Article> = this.articleRepository.createQueryBuilder('article')
+      .leftJoinAndSelect('article.user', 'user');
+
+    // /// START фильтр по поиску (title/content)
+    if (query.search) {
+      qb.andWhere('article.title LIKE :search OR article.content LIKE :search', { search: `%${query.search}%` });
+    }
+    // /// END
+
+    // /// START сортировка
+    const allowedSortFields = ['createdAt', 'title', 'published', 'updatedAt'];
+    const sortField = query.sort && allowedSortFields.includes(query.sort) ? query.sort : 'createdAt';
+    const order = query.order === 'asc' ? 'ASC' : 'DESC';
+
+    qb.orderBy(`article.${sortField}`, order);
+    // /// END
+
+    return qb.getMany();
   }
   // /// END
 
-  // /// START findOne
+  // /// START findOne (без изменений)
   async findOne(id: number): Promise<Article> {
     const article = await this.articleRepository.findOne({
       where: { id },
@@ -51,14 +68,14 @@ export class ArticleService {
   }
   // /// END
 
-  // /// START update
+  // /// START update (без изменений)
   async update(id: number, updateArticleDto: UpdateArticleDto): Promise<Article> {
     await this.articleRepository.update(id, updateArticleDto);
     return this.findOne(id);
   }
   // /// END
 
-  // /// START remove
+  // /// START remove (без изменений)
   async remove(id: number): Promise<void> {
     const result = await this.articleRepository.delete(id);
     if (!result.affected) throw new NotFoundException('Article not found');

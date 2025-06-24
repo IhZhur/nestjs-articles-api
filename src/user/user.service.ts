@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt'; // /// START: импорт bcrypt
 
 @Injectable()
 export class UserService {
@@ -21,16 +22,24 @@ export class UserService {
       throw new ConflictException('Username already exists');
     }
 
+    // /// START: Хешируем пароль перед сохранением
+    const hash = await bcrypt.hash(createUserDto.password, 10);
+    // /// END
+
     // Преобразуем строку-роль в UserRole (на всякий случай)
     const role: UserRole =
       createUserDto.role && Object.values(UserRole).includes(createUserDto.role)
         ? createUserDto.role
         : UserRole.USER;
 
+    // /// START: Записываем захешированный пароль
     const user = this.userRepository.create({
       ...createUserDto,
+      password: hash,
       role,
     });
+    // /// END
+
     return this.userRepository.save(user);
   }
   // /// END
@@ -59,10 +68,14 @@ export class UserService {
       role = updateUserDto.role;
     }
 
-    await this.userRepository.update(id, {
-      ...updateUserDto,
-      ...(role ? { role } : {}),
-    });
+    // /// START: Если обновляется пароль — хешируем
+    let updateData: Partial<User> = { ...updateUserDto, ...(role ? { role } : {}) };
+    if (updateUserDto.password) {
+      updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+    // /// END
+
+    await this.userRepository.update(id, updateData);
     return this.findOne(id);
   }
   // /// END

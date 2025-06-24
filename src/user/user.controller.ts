@@ -18,11 +18,23 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from './user.entity';
 
+// /// START: Swagger imports
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
+// /// END
+
+@ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // /// START создание пользователя (открытый)
+  @ApiOperation({ summary: 'Создать пользователя' })
+  @ApiResponse({ status: 201, description: 'Пользователь создан' })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
@@ -30,6 +42,9 @@ export class UserController {
   // /// END
 
   // /// START получение всех пользователей (только авторизованные)
+  @ApiOperation({ summary: 'Получить список пользователей' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Массив пользователей' })
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
@@ -38,6 +53,8 @@ export class UserController {
   // /// END
 
   // /// START получение одного пользователя по id (только авторизованные)
+  @ApiOperation({ summary: 'Получить пользователя по id' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -46,6 +63,8 @@ export class UserController {
   // /// END
 
   // /// START обновление пользователя (только авторизованные)
+  @ApiOperation({ summary: 'Обновить пользователя' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
@@ -53,7 +72,9 @@ export class UserController {
   }
   // /// END
 
-  // /// START удаление пользователя (только админ)
+  // /// START удаление пользователя (только admin)
+  @ApiOperation({ summary: 'Удалить пользователя (только admin)' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')

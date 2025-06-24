@@ -23,7 +23,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Логин пользователя, получить access и refresh токены' })
   @ApiResponse({ status: 201, description: 'JWT токены' })
   @Post('login')
-  async login(@Body() body: { username: string; password: string }) {
+  async login(
+    @Body() body: { username?: string; password?: string }
+  ) {
+    // /// START: строгая проверка на undefined/null
+    if (!body || !body.username || !body.password) {
+      throw new UnauthorizedException('Username and password required');
+    }
+    // /// END
+
     const user = await this.authService.validateUser(body.username, body.password);
     if (!user) throw new UnauthorizedException('Invalid credentials');
     return this.authService.login(user);
@@ -34,7 +42,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Обновить access_token через refresh_token' })
   @ApiResponse({ status: 201, description: 'Новый access_token' })
   @Post('refresh')
-  async refresh(@Body() body: { userId: number; refreshToken: string }) {
+  async refresh(@Body() body: { userId?: number; refreshToken?: string }) {
+    // /// START: строгая проверка на undefined/null
+    if (!body || typeof body.userId !== 'number' || !body.refreshToken) {
+      throw new UnauthorizedException('userId and refreshToken required');
+    }
+    // /// END
+
     return this.authService.refreshToken(body.userId, body.refreshToken);
   }
   // /// END
@@ -45,10 +59,14 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req: Request) {
-    // user приходит из JwtStrategy
-    // @ts-ignore
-    const userId = req.user.userId;
-    return this.authService.logout(userId);
+    // /// START: безопасно получаем userId из req.user (JwtStrategy кладёт userId)
+    const user: any = req.user;
+    if (!user || !user.userId) {
+      throw new UnauthorizedException('Invalid JWT payload');
+    }
+    // /// END
+
+    return this.authService.logout(user.userId);
   }
   // /// END
 }

@@ -8,6 +8,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt'; // /// START: импорт bcrypt
 
+
+
 @Injectable()
 export class UserService {
   constructor(
@@ -47,6 +49,12 @@ export class UserService {
   // /// START findAll
   async findAll(): Promise<User[]> {
     return this.userRepository.find({ relations: ['articles'] });
+  }
+  // /// END
+
+  // /// START обновить refreshToken
+  async updateRefreshToken(userId: number, refreshToken: string | undefined): Promise<void> {
+    await this.userRepository.update(userId, { refreshToken });
   }
   // /// END
 

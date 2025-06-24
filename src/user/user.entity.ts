@@ -10,12 +10,10 @@ import {
 } from 'typeorm';
 import { Article } from '../article/article.entity';
 
-// /// START RBAC: enum ролей
 export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
 }
-// /// END
 
 @Entity()
 export class User {
@@ -28,9 +26,12 @@ export class User {
   @Column()
   password: string;
 
-  // /// START RBAC: роль
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
+
+  // /// START: refreshToken для обновления сессии
+  @Column({ nullable: true })
+  refreshToken?: string;
   // /// END
 
   @OneToMany(() => Article, (article) => article.user)

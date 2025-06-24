@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Article } from '../article/article.entity';
 
-// /// START: ENUM РОЛЕЙ
+// /// START RBAC: enum ролей
 export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
@@ -28,8 +28,10 @@ export class User {
   @Column()
   password: string;
 
+  // /// START RBAC: роль
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
+  // /// END
 
   @OneToMany(() => Article, (article) => article.user)
   articles: Article[];

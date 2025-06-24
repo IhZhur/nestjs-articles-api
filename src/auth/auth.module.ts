@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UserModule } from '../user/user.module';
+import { RolesGuard } from './guards/roles.guard'; // /// START RBAC: Guard
+import { APP_GUARD } from '@nestjs/core'; // /// START
 
 @Module({
   imports: [
@@ -18,7 +20,16 @@ import { UserModule } from '../user/user.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    // /// START RBAC: глобальный Guard для ролей
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+    // /// END
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

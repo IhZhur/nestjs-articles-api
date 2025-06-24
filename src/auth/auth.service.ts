@@ -4,6 +4,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from '../user/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,20 +13,27 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  // /// START аутентификация пользователя
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.userService.findByUsername(username);
     if (user && await bcrypt.compare(password, user.password)) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }
     return null;
   }
+  // /// END
 
+  // /// START генерация JWT с ролью
   async login(user: any) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role as UserRole,
+    };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
+  // /// END
 }

@@ -18,20 +18,15 @@ export class ArticleService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // /// START create (без изменений)
-  async create(createArticleDto: CreateArticleDto): Promise<Article> {
-    const { userId, ...articleData } = createArticleDto;
-    let user: User | null = null;
-    if (userId) {
-      user = await this.userRepository.findOne({ where: { id: userId } });
-      if (!user) throw new NotFoundException('User not found');
-    }
-    const article = this.articleRepository.create({
-      ...articleData,
-      ...(user ? { user } : {}),
-    });
-    return this.articleRepository.save(article);
-  }
+  async create(createArticleDto: CreateArticleDto, userId: number): Promise<Article> {
+  const user = await this.userRepository.findOne({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
+  const article = this.articleRepository.create({
+    ...createArticleDto,
+    user,
+  });
+  return await this.articleRepository.save(article);
+}
   // /// END
 
   // /// START findAll c фильтрами и сортировкой

@@ -10,76 +10,83 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
-import { UserRole } from './user.entity';
+import { UserRole, User } from './user.entity';
+import { OwnerOrAdminGuard } from '../auth/guards/owner-or-admin.guard'; // 👈
+import { OwnerCheck } from '../auth/decorators/owner-check.decorator';  // 👈
 
-// /// START: Swagger imports
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiBody,
 } from '@nestjs/swagger';
-// /// END
 
 @ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // /// START создание пользователя (открытый)
   @ApiOperation({ summary: 'Создать пользователя' })
-  @ApiResponse({ status: 201, description: 'Пользователь создан' })
+  @ApiResponse({ status: 201, description: 'Пользователь создан', type: User })
+  @ApiBody({ type: CreateUserDto })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
-  // /// END
 
-  // /// START получение всех пользователей (только авторизованные)
   @ApiOperation({ summary: 'Получить список пользователей' })
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Массив пользователей' })
+  @ApiResponse({ status: 200, description: 'Массив пользователей', type: [User] })
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
-  // /// END
 
-  // /// START получение одного пользователя по id (только авторизованные)
   @ApiOperation({ summary: 'Получить пользователя по id' })
   @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Пользователь', type: User })
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
-  // /// END
 
-  // /// START обновление пользователя (только авторизованные)
+  // --- Только владелец или admin ---
   @ApiOperation({ summary: 'Обновить пользователя' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiResponse({ status: 200, description: 'Обновлённый пользователь', type: User })
+  @ApiBody({ type: UpdateUserDto })
+  @UseGuards(JwtAuthGuard, OwnerOrAdminGuard)
+  @OwnerCheck({
+    service: UserService,
+    findMethod: 'findOne',
+    ownerField: 'id',
+  })
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.userService.update(id, updateUserDto);
   }
-  // /// END
 
-  // /// START удаление пользователя (только admin)
+  // --- Только admin (через @Roles) ---
   @ApiOperation({ summary: 'Удалить пользователя (только admin)' })
   @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Пользователь удалён' })
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.remove(id);
   }
-  // /// END
 }

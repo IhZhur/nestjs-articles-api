@@ -4,15 +4,19 @@ import { Controller, Post, Body, UnauthorizedException, Req, UseGuards } from '@
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Request } from 'express';
+import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+// /// START
+import { AuthTokensDto } from './dto/auth-tokens.dto'; // 👈 updated
+// /// END
 
-// /// START: Swagger imports
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiBody,
 } from '@nestjs/swagger';
-// /// END
 
 @ApiTags('auth')
 @Controller('auth')
@@ -21,18 +25,14 @@ export class AuthController {
 
   // /// START login
   @ApiOperation({ summary: 'Логин пользователя, получить access и refresh токены' })
-  @ApiResponse({ status: 201, description: 'JWT токены' })
+  @ApiResponse({ status: 201, description: 'JWT токены', type: AuthTokensDto }) // 👈 updated
+  @ApiBody({ type: LoginDto }) // 👈 updated
   @Post('login')
-  async login(
-    @Body() body: { username?: string; password?: string }
-  ) {
-    // /// START: строгая проверка на undefined/null
-    if (!body || !body.username || !body.password) {
+  async login(@Body() loginDto: LoginDto) {
+    if (!loginDto.username || !loginDto.password) {
       throw new UnauthorizedException('Username and password required');
     }
-    // /// END
-
-    const user = await this.authService.validateUser(body.username, body.password);
+    const user = await this.authService.validateUser(loginDto.username, loginDto.password);
     if (!user) throw new UnauthorizedException('Invalid credentials');
     return this.authService.login(user);
   }
@@ -40,15 +40,13 @@ export class AuthController {
 
   // /// START refresh
   @ApiOperation({ summary: 'Обновить access_token через refresh_token' })
-  @ApiResponse({ status: 201, description: 'Новый access_token' })
+  @ApiResponse({ status: 201, description: 'Новый access_token', type: AuthTokensDto }) // 👈 updated
+  @ApiBody({ type: RefreshTokenDto }) // 👈 updated
   @Post('refresh')
-  async refresh(@Body() body: { userId?: number; refreshToken?: string }) {
-    // /// START: строгая проверка на undefined/null
+  async refresh(@Body() body: RefreshTokenDto) {
     if (!body || typeof body.userId !== 'number' || !body.refreshToken) {
       throw new UnauthorizedException('userId and refreshToken required');
     }
-    // /// END
-
     return this.authService.refreshToken(body.userId, body.refreshToken);
   }
   // /// END
@@ -56,16 +54,14 @@ export class AuthController {
   // /// START logout
   @ApiOperation({ summary: 'Logout: удалить refresh_token' })
   @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Успешный выход', schema: { example: { message: 'Logout successful' } } }) // 👈 updated
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req: Request) {
-    // /// START: безопасно получаем userId из req.user (JwtStrategy кладёт userId)
     const user: any = req.user;
     if (!user || !user.userId) {
       throw new UnauthorizedException('Invalid JWT payload');
     }
-    // /// END
-
     return this.authService.logout(user.userId);
   }
   // /// END

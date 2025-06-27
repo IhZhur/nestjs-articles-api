@@ -1,11 +1,8 @@
-// src/auth/guards/roles.guard.ts
-
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../roles.decorator';
 import { UserRole } from '../../user/user.entity';
 
-// /// START RBAC: Guard по ролям
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -16,10 +13,13 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!requiredRoles || requiredRoles.length === 0) {
-      return true; // Если роль не задана — доступен всем с авторизацией
+      return true;
     }
     const { user } = context.switchToHttp().getRequest();
+    // 👇 Защита от undefined/null и красивый отказ
+    if (!user || !user.role) {
+      throw new ForbiddenException('Access denied: No user or role found');
+    }
     return requiredRoles.includes(user.role);
   }
 }
-// /// END

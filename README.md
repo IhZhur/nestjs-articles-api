@@ -1,204 +1,223 @@
-# 📰 NestJS Articles API
+# NestJS Articles API
 
-Простой учебный и production-ready CRUD-сервис на **NestJS + TypeORM + MySQL**.
-
-**CRUD для статей и пользователей, роли (admin/user), OwnerOrAdminGuard, логирование, защита токенов, Swagger, миграции.**
+A simple, production-ready REST API for articles and users built with NestJS, TypeORM, and MySQL. Supports full CRUD operations, JWT authentication, user roles (admin/user), RBAC, migrations, logging, and Swagger documentation.
 
 ---
 
-## 📦 Стек технологий
+## Table of Contents
 
-- **NestJS**
-- **TypeORM**
-- **MySQL** (например, через XAMPP)
-- **class-validator**, **class-transformer**
-- **JWT**-авторизация, RBAC (admin/user)
-- **Swagger UI**
-- **Логирование** (interceptor)
-- **REST API**
+* [Technologies](#technologies)
+* [Quick Start](#quick-start)
+* [Configuration](#configuration)
+* [Migrations](#migrations)
+* [API Overview](#api-overview)
 
----
-
-## 🚀 Быстрый старт
-
-1. **Клонируй репозиторий**
-    ```bash
-    git clone https://github.com/<твой-логин>/<имя-репозитория>.git
-    cd <имя-репозитория>
-    ```
-
-2. **Установи зависимости**
-    ```bash
-    npm install
-    ```
-
-3. **Настрой .env**
-
-    Скопируй/создай файл `.env`:
-
-    ```env
-    DB_TYPE=mysql
-    DB_HOST=localhost
-    DB_PORT=3306
-    DB_USERNAME=root
-    DB_PASSWORD=
-    DB_DATABASE=nestjs_articles_db
-    JWT_SECRET=your_jwt_secret
-    JWT_REFRESH_SECRET=your_refresh_secret
-    ```
-
-    ⚠️ Убедись, что база данных `nestjs_articles_db` создана (например, через XAMPP: http://localhost/phpmyadmin)
-
-4. **Прогони миграции**
-
-    ```bash
-    npx typeorm-ts-node-commonjs migration:run -d data-source.ts
-    ```
-
-5. **Запусти приложение**
-
-    ```bash
-    npm run start:dev
-    ```
-
-    Приложение будет доступно по адресу: [http://localhost:3000](http://localhost:3000)
+  * [Article Routes](#article-routes)
+  * [User Routes](#user-routes)
+  * [Authentication](#authentication)
+* [Authorization and Access Control](#authorization-and-access-control)
+* [Swagger](#swagger)
+* [Scripts](#scripts)
+* [Project Structure](#project-structure)
+* [Security](#security)
+* [Roadmap](#roadmap)
+* [Author](#author)
 
 ---
 
-## 📚 Доступные маршруты
+## Technologies
 
-### Статьи
-
-| Метод | URL             | Описание                 | Доступ                       |
-|-------|-----------------|--------------------------|------------------------------|
-| GET   | /articles       | Получить все статьи      | 🔓 Публичный                 |
-| GET   | /articles/:id   | Получить статью по ID    | 🔓 Публичный                 |
-| POST  | /articles       | Создать статью           | 🔐 Требует JWT               |
-| PUT   | /articles/:id   | Обновить статью          | 🔐 JWT + author/admin        |
-| DELETE| /articles/:id   | Удалить статью           | 🔐 JWT + author/admin        |
-
-### Пользователи
-
-| Метод | URL           | Описание                  | Доступ                     |
-|-------|---------------|---------------------------|----------------------------|
-| GET   | /users        | Все пользователи          | 🔐 JWT                     |
-| GET   | /users/:id    | Один пользователь         | 🔐 JWT                     |
-| POST  | /users        | Создать пользователя      | 🔓 Публичный               |
-| PUT   | /users/:id    | Обновить пользователя     | 🔐 JWT + owner/admin       |
-| DELETE| /users/:id    | Удалить пользователя      | 🔐 JWT + admin             |
-
-### Аутентификация
-
-| Метод | URL           | Описание             | Доступ       |
-|-------|---------------|----------------------|--------------|
-| POST  | /auth/login   | Логин                | 🔓 Публичный |
-| POST  | /auth/refresh | Обновить токен       | 🔓 Публичный |
-| POST  | /auth/logout  | Выход                | 🔐 JWT       |
+* NestJS
+* TypeORM
+* MySQL
+* class-validator, class-transformer
+* JWT (access/refresh), RBAC (admin/user)
+* Swagger UI
+* REST API
+* Logging (interceptor)
 
 ---
 
-## ✅ Пример тела запроса (POST / PUT)
+## Quick Start
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/<your-username>/<repo-name>.git
+   cd <repo-name>
+   ```
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+3. **Create and configure `.env`:**
+
+   ```env
+   DB_TYPE=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USERNAME=root
+   DB_PASSWORD=
+   DB_DATABASE=nestjs_articles_db
+   JWT_SECRET=your_jwt_secret
+   JWT_REFRESH_SECRET=your_refresh_secret
+   ```
+
+   > Make sure the database `nestjs_articles_db` exists (e.g., via phpMyAdmin/XAMPP).
+4. **Run migrations:**
+
+   ```bash
+   npx typeorm-ts-node-commonjs migration:run -d data-source.ts
+   ```
+5. **Start the application:**
+
+   ```bash
+   npm run start:dev
+   ```
+
+   The API will be available at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Configuration
+
+* All environment variables are stored in `.env`.
+* Set your MySQL user password in `DB_PASSWORD`.
+* Set strong secrets for `JWT_SECRET` and `JWT_REFRESH_SECRET`.
+
+---
+
+## Migrations
+
+* Migrations are located in the `migrations/` directory.
+* Run migrations with:
+
+  ```bash
+  npx typeorm-ts-node-commonjs migration:run -d data-source.ts
+  ```
+
+---
+
+## API Overview
+
+### Article Routes
+
+| Method | URL            | Description       | Access               |
+| ------ | -------------- | ----------------- | -------------------- |
+| GET    | /articles      | Get all articles  | Public               |
+| GET    | /articles/\:id | Get article by ID | Public               |
+| POST   | /articles      | Create article    | JWT required         |
+| PUT    | /articles/\:id | Update article    | JWT + owner or admin |
+| DELETE | /articles/\:id | Delete article    | JWT + owner or admin |
+
+### User Routes
+
+| Method | URL         | Description       | Access               |
+| ------ | ----------- | ----------------- | -------------------- |
+| GET    | /users      | Get all users     | JWT required         |
+| GET    | /users/\:id | Get user by ID    | JWT required         |
+| POST   | /users      | Register new user | Public               |
+| PUT    | /users/\:id | Update user       | JWT + owner or admin |
+| DELETE | /users/\:id | Delete user       | JWT + admin          |
+
+### Authentication
+
+| Method | URL           | Description   | Access       |
+| ------ | ------------- | ------------- | ------------ |
+| POST   | /auth/login   | Login         | Public       |
+| POST   | /auth/refresh | Refresh token | Public       |
+| POST   | /auth/logout  | Logout        | JWT required |
+
+**Sample Request Body (POST/PUT):**
 
 ```json
 {
-  "title": "Новая статья",
-  "content": "Это содержимое статьи.",
+  "title": "Article title",
+  "content": "Article body text",
   "published": true
 }
 ```
 
-## 🔐 Авторизация (JWT)
+**JWT Authorization:**
+Send the access token in the header for protected endpoints:
 
-1. Получи `access_token` через `POST /auth/login`
-2. Укажи токен в Swagger ("Authorize") или в заголовке:
-
-    ```http
-    Authorization: Bearer <твой-токен>
-    ```
-
-3. Для всех защищённых методов (`POST`/`PUT`/`DELETE`) требуется JWT.
+```
+Authorization: Bearer <your_access_token>
+```
 
 ---
 
-## 🧩 Проверки прав (RBAC)
+## Authorization and Access Control
 
-- **User:**  
-    - Обновлять/удалять может только сам пользователь или admin
-- **Article:**  
-    - Обновлять/удалять может только автор статьи или admin
-- Используется универсальный Guard `OwnerOrAdminGuard` (см. исходники)
+* Users can update/delete **only their own accounts** (admin can manage all users).
+* Only the article author or admin can update/delete articles.
+* Custom guard `OwnerOrAdminGuard` is used for resource-level access control.
 
 ---
 
-## 📚 Swagger UI
+## Swagger
 
-- Открывай [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
-- Полные схемы, примеры, авторизация через Bearer Token
-- Можно тестировать все методы *вживую* (через "Authorize")
-
----
-
-## 🛠 Основные команды
-
-| Скрипт                | Описание                                 |
-|-----------------------|------------------------------------------|
-| `npm run start:dev`   | Запуск в режиме разработки               |
-| `npm run start`       | Продакшн запуск (build + run)            |
-| `npm run test:e2e`    | E2E-тесты (если настроены)               |
+* Full API documentation: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+* Bearer token authorization and request testing supported.
 
 ---
 
-## 🗄 Миграции
+## Scripts
 
-- Файлы — в `migrations/`
-- Запуск:
-
-    ```bash
-    npx typeorm-ts-node-commonjs migration:run -d data-source.ts
-    ```
-
----
-
-## 💡 Структура проекта
-
-- `src/article/` — всё для статей (entity, controller, service, dto)
-- `src/user/` — всё для пользователей
-- `src/auth/` — аутентификация, Guard'ы, декораторы
-- `src/common/interceptors/` — логирование
-- `src/main.ts` — глобальные пайпы, сериализация, Swagger
+| Script             | Description                  |
+| ------------------ | ---------------------------- |
+| npm run start\:dev | Start in development mode    |
+| npm run start      | Production build & start     |
+| npm run test\:e2e  | Run E2E tests (if available) |
 
 ---
 
-## 🦾 Security best practices
+## Project Structure
 
-- Пароли и refresh-токены **никогда не попадают в ответы API** (`@Exclude` + `class-transformer`)
-- Все защищённые маршруты через Guard'ы
-- UserId только из токена, не из body
-- Глобальная валидация DTO, логирование
-
----
-
-## 💠 План развития (Roadmap)
-
-- [x] NestJS + TypeORM + MySQL
-- [x] CRUD для Article
-- [x] Валидация DTO, DI
-- [x] RBAC и OwnerOrAdminGuard
-- [x] Swagger UI
-- [x] JWT авторизация, logout, refresh
-- [x] Глобальное логирование
-- [x] Миграции
-- [x] Пагинация, фильтрация, сортировка
-- [x] Unit и e2e тесты (заготовка)
-- [ ] Развёртывание (Docker, Render, Railway)
-- [ ] CI/CD
+* `src/article/` — article entity, controller, service, DTOs
+* `src/user/` — user entity, controller, service, DTOs
+* `src/auth/` — authentication, guards, decorators
+* `src/common/interceptors/` — logging
+* `src/main.ts` — global pipes, serialization, Swagger setup
 
 ---
 
-## 👨‍💻 Автор
+## Security
+
+* Passwords and refresh tokens are never returned in API responses (handled with `@Exclude` and class-transformer).
+* All protected routes are guarded (JWT and role guards).
+* UserId is always taken from JWT, not from the request body.
+* Global DTO validation enabled.
+
+---
+
+## Roadmap
+
+* [x] NestJS + TypeORM + MySQL
+* [x] CRUD for articles and users
+* [x] RBAC and custom guards
+* [x] Swagger UI
+* [x] JWT auth, refresh, logout
+* [x] Logging
+* [x] Migrations
+* [x] Pagination, sorting, filtering
+* [x] E2E tests (template)
+* [ ] Docker/Cloud deployment
+* [ ] CI/CD pipeline
+
+---
+
+## Author
 
 IhZhur
 
 ---
 
-## 🏁 Проект готов к работе, коммиту и демо!
+# Navigation notes
+
+> **If the navigation links in the Table of Contents do not work when previewing outside of GitHub:**
+>
+> * On GitHub.com, anchor links (like `[Quick Start](#quick-start)`) always work and jump to the correct section.
+> * In some editors (VS Code, Notepad, some preview plugins), markdown navigation may not work or requires an extension.
+> * For reliable preview, open your README.md directly on GitHub after pushing.
